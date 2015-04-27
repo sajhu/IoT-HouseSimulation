@@ -25,6 +25,8 @@ public class GetRequest
 
 			HttpGet httpGet = new HttpGet(url);
 
+			httpGet.setHeader("X-Auth-Token", "rDTig0Elq7mXmKjbj5g2CXFCMDT3LBECwLTnjBIRjla8Wc8Hm581CiWEtahQ");
+
 			response = httpClient.execute( httpGet );
 			HttpEntity entity = response.getEntity();
 			this.content = EntityUtils.toString(response.getEntity());

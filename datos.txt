@@ -1,0 +1,18 @@
+UBIDOTS
+
+	API TOKENS
+
+		Proccesing
+		rDTig0Elq7mXmKjbj5g2CXFCMDT3LBECwLTnjBIRjla8Wc8Hm581CiWEtahQ
+
+		Galileo
+		PKWq1JsD8O7UPdbzfOl0j5VXgBLVgZGVONgSqcPJ7DVAJFDEvIC7FB5MgIrM
+
+	Variables
+
+		Movimiento 		- 55372cbf7625426c5e35903b
+		Temperatura 	- 552ec624762542382be29da6
+
+PROCCESING
+
+	
