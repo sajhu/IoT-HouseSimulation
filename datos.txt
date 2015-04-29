@@ -12,9 +12,10 @@ UBIDOTS
 
 http://things.ubidots.com/api/v1.6/variables/552ec624762542382be29da6
 
-		Movimiento 		- 55372cbf7625426c5e35903b
-		Temperatura 	- 552ec624762542382be29da6
-
+		Movimiento  Cuarto 		- 55372cbf7625426c5e35903b
+		Movimiento  Sala 		- 55408ae876254226a67b1398
+		Temperatura Ambiente	- 552ec624762542382be29da6
+		Temperatura Puntual		- 5540929d762542375f3b8fc2
 PROCCESING
 
 	
