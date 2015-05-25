@@ -5,16 +5,33 @@
    // Newer Ethernet shields have a MAC address printed on a sticker on the shield
    byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 
-   int tempPin = A0;
+   int tempPuntualPin = A0;
+   int tempAmbientePin = A2;
+   int movimientoPin = 2;
+   
+   int tiempoCorto = 200;
+   int tiempoLargo = 500;
+   
    // Initialize the Ethernet client library
    // with the IP address and port of the server
    // that you want to connect to (port 80 is default for HTTP):
    EthernetClient client;
 
-   String idvariable = "552ec624762542382be29da6";
    String token = "PKWq1JsD8O7UPdbzfOl0j5VXgBLVgZGVONgSqcPJ7DVAJFDEvIC7FB5MgIrM";
 
-    String temperatura = "";
+   String idTempAmbiente   = "552ec624762542382be29da6";
+   String idTempPuntual    = "5540929d762542375f3b8fc2";
+   String idMov            = "55372cbf7625426c5e35903b";
+
+   String temperaturaPuntual = "";
+   String temperaturaAmbiente = "";
+   int hayMovimiento = false;
+   
+   int contPuntual = 0;
+   int contAmbiental = 0;
+   int contMov = 0;
+   
+   
 
    void setup() {
     // Open serial communications and wait for port to open:
@@ -23,8 +40,9 @@
        ; // wait for serial port to connect. Needed for Leonardo only
      }
        pinMode(13, OUTPUT); 
+       pinMode(movimientoPin, INPUT);
 
-
+    Serial.println("Attempting to connect to internet...");
      // start the Ethernet connection:
      if (Ethernet.begin(mac) == 0) {
        Serial.println("Failed to configure Ethernet using DHCP");
@@ -48,26 +66,73 @@
 
    void loop()
    {
-     int value = analogRead(tempPin);
-     String nuevaTemperatura = convertirTemp(value);
+     int valuePun = analogRead(tempPuntualPin);
+     int valueAmb = analogRead(tempAmbientePin);
+     int valueMov = digitalRead(movimientoPin);
+     boolean huboCambio = false;
+     String nuevaTemperatura = "";
      
-     if(nuevaTemperatura != temperatura){
-            digitalWrite(13, HIGH);
+     
+      // MANEJO SENSOR MOVIMIENTO - PIN D2
 
-        temperatura = nuevaTemperatura;
-       Serial.print("Actuailzando temperatura a ");
-       Serial.print(temperatura);
-       Serial.println(" C");
-       save_value(temperatura);
+     if(valueMov != hayMovimiento) {
+       hayMovimiento = valueMov;
+       Serial.print(contMov);
+       Serial.print(". Actulizando movimiento a ");
+       Serial.print(valueMov);
+       Serial.println(" ");
+       if(hayMovimiento == 1)
+         save_value(idMov, "1");
+       else
+         save_value(idMov, "0");
        digitalWrite(13, LOW);
-       delay(200);
-     }else{
-     delay(2000);
-
+       huboCambio = true;
+       contMov ++;
      }
+     
+      // MANEJO TEMPERATURA PUNTUAL - PIN A0
+     nuevaTemperatura = convertirTemp(valuePun);
+
+     if(nuevaTemperatura != temperaturaPuntual){
+       digitalWrite(13, HIGH);
+
+       temperaturaPuntual = nuevaTemperatura;
+       Serial.print(contPuntual);
+       Serial.print(". Actulizando temperatura  puntual a ");
+       Serial.print(temperaturaPuntual);
+       Serial.println(" C");
+       save_value(idTempPuntual, temperaturaPuntual);
+       digitalWrite(13, LOW);
+       huboCambio = true;
+       contPuntual ++;
+     }
+ 
+     // MANEJO TEMPERATURA AMBIENTAL - PIN A2
+     nuevaTemperatura = convertirTemp(valueAmb);
+     
+     if(nuevaTemperatura != temperaturaAmbiente){
+       digitalWrite(13, HIGH);
+
+       temperaturaAmbiente = nuevaTemperatura;
+       Serial.print(contAmbiental);
+       Serial.print(". Actulizando temperatura ambiental a ");
+       Serial.print(temperaturaAmbiente);
+       Serial.println(" C");
+       save_value(idTempAmbiente, temperaturaAmbiente);
+       digitalWrite(13, LOW);
+       huboCambio = true;
+       contAmbiental ++;
+
+     }     
+     
+     
+     if(huboCambio)
+       delay(tiempoCorto);
+     else
+       delay(tiempoLargo);    
    }
 
-   void save_value(String value)
+   void save_value(String variable, String value)
    {
        // if you get a connection, report back via serial:
        int num=0;
@@ -77,7 +142,7 @@
        num = var.length();
        if (client.connect("things.ubidots.com", 80)) {
          String post = "POST /api/v1.6/variables/";
-         post += idvariable;
+         post += variable;
          post += "/values HTTP/1.1\nContent-Type: application/json\nContent-Length: ";
          post += num;
          post += "\nX-Auth-Token: ";
@@ -121,9 +186,9 @@ String convertirTemp(int voltaje)
 long getDecimal(float val)
 {
  int intPart = int(val);
- long decPart = 1000*(val-intPart); //I am multiplying by 1000 assuming that the foat values will have a maximum of 3 decimal places
+ long decPart = 100*(val-intPart); //I am multiplying by 1000 assuming that the foat values will have a maximum of 3 decimal places
                                    //Change to match the number of decimal places you need
  if(decPart>0)return(decPart);           //return the decimal part of float number if it is available 
  else if(decPart<0)return((-1)*decPart); //if negative, multiply by -1
- else if(decPart=0)return(00);           //return 0 if decimal part of float number is not available
+ else if(decPart==0)return(00);           //return 0 if decimal part of float number is not available
 }

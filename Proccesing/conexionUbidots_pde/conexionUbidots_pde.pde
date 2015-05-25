@@ -1,19 +1,25 @@
 import http.requests.*;
 
 // CONSTANTES
-String idTemp = "552ec624762542382be29da6";
-String idMovCuarto = "55372cbf7625426c5e35903b";
-String idMovSala = "55408ae876254226a67b1398";
+String idTempPuntual   = "5540929d762542375f3b8fc2";
+String idTempAmbiente  = "552ec624762542382be29da6";
+String idMovCuarto     = "55372cbf7625426c5e35903b";
+String idMovSala       = "55408ae876254226a67b1398";
 
-int ancho = 500;
-int alto = 3000;
+int ancho = 600;
+int alto = 500;
 
 color amarillo = color(255, 204, 0);
 color grisoscuro = color(65);
 color grisclaro = color(170);
 
-int tiempoCorto = 200;
-int tiempoLargo = 500;
+int tiempoCorto = 400;
+int tiempoLargo = 1000;
+
+int tempBaja = 24;  //      x < 24
+int tempMedia = 26; // 24 < x < 26
+int tempAlta = 28;  // 26 < x < 28
+                    // 28 < x
 
 PImage nube, bombillo, bombillote, mundo, persona, temp0, temp1, temp2, temp3;
 boolean isNube, isBombillo, isBombillote, isMundo, isPersona;
@@ -23,8 +29,11 @@ PFont aller, allerlight, allerdisplay;
 
 // ATRIBUTOS
 
-float temperatura = 0; // la ultima temperatura obtenida
+float temperaturaAmbiente = 0; // la ultima temperatura obtenida
+float temperaturaPuntual = 0; // la ultima temperatura obtenida
+
 boolean hayMovimiento = false;
+
 int tiempo = 0; // tiempo a esperar para consultar la tempereratura de nuevo
 int consultas = 0; // numero de veces que ha sido consultada la temperatura
 long lastCheck; // ultima vez que se consultó la temperatura
@@ -72,17 +81,29 @@ void draw(){
   textAlign(CENTER);
   fill(grisoscuro);
   texto("Uniandes IoT", ancho / 2, 44, allerdisplay, 30);
-  
-    fill(fillcolor, 140);
+  texto("Cuarto", ancho / 2, 120, 30);
+  texto("Puntual", 80, alto - 40, 17);
+    
+  textAlign(RIGHT);
+  texto("Ambiente", ancho - 46, alto - 40, 17);
+
+  textAlign(CENTER);
+
+  fill(fillcolor, 140);
 
   
   if(millis() - lastCheck > tiempo) {
-    thread("actualizarTemp");
+    thread("actualizarTempPuntual");
+    thread("actualizarTempAmbiente");
     thread("actualizarMovimiento");
   }
-    
+  
+  
+  texto(nf(temperaturaPuntual, 0, 1) + "ºC", 80, alto - 18, 20);
+
   textAlign(RIGHT);
-  texto(nf(temperatura, 0, 1) + "ºC", ancho - 46, alto - 18, 20);
+    
+  texto(nf(temperaturaAmbiente, 0, 1) + "ºC", ancho - 46, alto - 18, 20);
   
   matachito(mouseX, mouseY);
   imagenes();
@@ -91,7 +112,7 @@ void draw(){
 public void imagenes(){
   
   if(isNube)
-    image(nube, 10, alto - 40);
+    image(nube, ancho / 2 -16, alto - 40);
     
   if(isBombillo)
     image(bombillo, ((ancho / 2) - 134), 8);
@@ -104,22 +125,33 @@ public void imagenes(){
    
  
   tint(255, 200); 
-  if(temperatura < 24)
-    image(temp0, ancho - 88, alto - 107);
-  else if(temperatura < 25)
-    image(temp1, ancho - 88, alto - 107);
-  else if(temperatura < 27)
-    image(temp2, ancho - 88, alto - 107);
+  
+  if(temperaturaPuntual < tempBaja)
+    image(temp0, -38, alto - 107);
+  else if(temperaturaPuntual < tempMedia)
+    image(temp1, -38, alto - 107);
+  else if(temperaturaPuntual < tempAlta)
+    image(temp2, -38, alto - 107);
   else
-    image(temp3, ancho - 88, alto - 107);
+    image(temp3, -38, alto - 107);
+  
+  
+  if(temperaturaAmbiente < tempBaja)
+    image(temp0, ancho - 86, alto - 107);
+  else if(temperaturaAmbiente < tempMedia)
+    image(temp1, ancho - 86, alto - 107);
+  else if(temperaturaAmbiente < tempAlta)
+    image(temp2, ancho - 86, alto - 107);
+  else
+    image(temp3, ancho - 86, alto - 107);
 }
 
-public void actualizarTemp(){
+public void actualizarTempAmbiente(){
   isNube = true;
   isBombillo = false;
-  float nueva = getLastFloatValue(idTemp);
+  float nueva = getLastFloatValue(idTempAmbiente);
     
-    if(temperatura != nueva){
+    if(temperaturaAmbiente != nueva){
       tiempo = tiempoCorto;
       fillcolor = grisoscuro;
       cambio = true;
@@ -130,14 +162,35 @@ public void actualizarTemp(){
       cambio = false;
     }
     
-    temperatura = nueva;
+    temperaturaAmbiente = nueva;
+    lastCheck = millis();
+    
+}
+
+public void actualizarTempPuntual(){
+  isNube = true;
+  isBombillo = false;
+  float nueva = getLastFloatValue(idTempPuntual);
+    
+    if(temperaturaAmbiente != nueva){
+      tiempo = tiempoCorto;
+      fillcolor = grisoscuro;
+      cambio = true;
+    }
+    else {
+      tiempo = tiempoLargo;
+      fillcolor = grisclaro;
+      cambio = false;
+    }
+    
+    temperaturaPuntual = nueva;
     lastCheck = millis();
     
 }
 
 public void actualizarMovimiento() {
   isNube = true;
-  int nuevo = getLastIntValue(idMovSala);
+  int nuevo = getLastIntValue(idMovCuarto);
   
   if( nuevo == 1) {
     tiempo = tiempoCorto;
